@@ -438,14 +438,20 @@ function cudnntest.SpatialAveragePooling_batch()
    local outj = math.random(1,64)
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
+   local ceil_mode = math.random(0,1) == 1
+   local exclude_mode = math.random(0,1) == 1
    local input = torch.randn(bs,from,inj,ini):cuda()
    local gradOutput = torch.randn(bs,from,outj,outi):cuda()
 
    local sconv = nn.SpatialAveragePooling(ki,kj,si,sj):cuda()
+   if ceil_mode then sconv:ceil() end
+   if exclude_mode then sconv:setCountExcludePad() end
    local groundtruth = sconv:forward(input):clone()
    local groundgrad = sconv:backward(input, gradOutput)
    cutorch.synchronize()
    local gconv = cudnn.SpatialAveragePooling(ki,kj,si,sj):cuda()
+   if ceil_mode then gconv:ceil() end
+   if exclude_mode then gconv:setCountExcludePad() end
    local rescuda = gconv:forward(input)
    -- serialize and deserialize
    torch.save('modelTemp.t7', gconv)
@@ -476,14 +482,20 @@ function cudnntest.SpatialAveragePooling_single()
    local outj = math.random(1,64)
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
+   local ceil_mode = math.random(0,1) == 1
+   local exclude_mode = math.random(0,1) == 1
    local input = torch.randn(from,inj,ini):cuda()
    local gradOutput = torch.randn(from,outj,outi):cuda()
 
    local sconv = nn.SpatialAveragePooling(ki,kj,si,sj):cuda()
+   if ceil_mode then sconv:ceil() end
+   if exclude_mode then sconv:setCountExcludePad() end
    local groundtruth = sconv:forward(input):clone()
    local groundgrad = sconv:backward(input, gradOutput)
    cutorch.synchronize()
    local gconv = cudnn.SpatialAveragePooling(ki,kj,si,sj):cuda()
+   if ceil_mode then gconv:ceil() end
+   if exclude_mode then gconv:setCountExcludePad() end
    local _ = gconv:forward(input)
    -- serialize and deserialize
    torch.save('modelTemp.t7', gconv)

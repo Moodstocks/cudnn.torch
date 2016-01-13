@@ -10,6 +10,16 @@ local function backwardCompatible(self)
    end
 end
 
+function SpatialAveragePooling:setCountIncludePad()
+   self.count_include_pad = true
+   return self
+end
+
+function SpatialAveragePooling:setCountExcludePad()
+   self.count_include_pad = false
+   return self
+end
+
 function SpatialAveragePooling:updateOutput(input)
    -- for nn <> cudnn conversion
    backwardCompatible(self)
@@ -17,12 +27,12 @@ function SpatialAveragePooling:updateOutput(input)
       assert(self.divide, 'not supported')
    end
 
-   self.count_include_pad = self.count_include_pad ~= nil and 
-      self.count_include_pad or true
+   if self.count_include_pad == nil then
+      self.count_include_pad = true
+   end
    if self.count_include_pad then
       self.mode = 'CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING'
    else 
-      error'This mode is untested in cudnn'
       self.mode = 'CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING'
    end
    return parent.updateOutput(self, input)
